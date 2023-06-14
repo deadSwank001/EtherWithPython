@@ -1,0 +1,26 @@
+import numpy as np
+import talib as ta
+
+class MovingAverageCrossAlgorithm(QCAlgorithm):
+    def Initialize(self):
+        self.SetStartDate(2010, 6, 1)
+        self.SetEndDate(2021, 6, 1)
+        self.SetCash(10000)
+        
+        self.symbol = self.AddEquity("SPY", Resolution.Daily).Symbol
+        
+        self.fast_ma = self.SMA(self.symbol, 20)
+        self.slow_ma = self.SMA(self.symbol, 50)
+        
+        self.SetWarmUp(50)
+        
+    def OnData(self, data):
+        if not (self.fast_ma.IsReady and self.slow_ma.IsReady):
+            return
+
+        if self.fast_ma.Current.Value > self.slow_ma.Current.Value:
+            if self.Portfolio[self.symbol].Invested <= 0:
+                self.SetHoldings(self.symbol, 1)
+        else:
+            if self.Portfolio[self.symbol].Invested > 0:
+                self.Liquidate(self.symbol)
